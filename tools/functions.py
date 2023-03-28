@@ -18,11 +18,35 @@ def fetch_api(url):
 	return res
 
 
-def save_html_file(bird_name, html):
-	file_name = bird_name.lower().replace(" ", "_")
-	f = open("{0}.html".format(file_name), "w")
-	f.write(html)
-	f.close()
+def get_bird_recordings(bird_name):
+	import json
+	from urllib.parse import quote
+
+	api_url = "https://xeno-canto.org/api/2/recordings?query={0}+cnt:france".format(
+		quote(bird_name.lower().encode("utf8")))
+	api = fetch_api(api_url)
+	bird = {}
+
+	if "error" not in api:
+		api_data = json.loads(api["data"].decode('utf-8'))
+
+		if api_data["numRecordings"] > "0":
+			bird["bird_gen_name"] = bird_name.title()
+			bird["recordings"] = {
+				"file_url":     [],
+				"download_url": []
+			}
+
+			for recording in api_data["recordings"]:
+				file_path = recording["sono"]["small"].split("ffts")[0]
+				file_name = quote(recording["file-name"].encode("utf-8"))
+				file_url = "https:{0}{1}".format(file_path, file_name)
+
+				bird["recordings"]["file_url"].append(file_url)
+				bird["recordings"]["download_url"].append(recording["file"])
+	else:
+		return api["error"]
+	return bird
 
 
 def create_html_file(recordings):
@@ -49,9 +73,6 @@ def create_html_file(recordings):
 			background: rgba(51, 51, 51, 0.8);
 			/*transition: transform .2s ease-in-out;*/
 		}
-		/*.bird-container:hover {
-			transform: scale(1.05);
-		}*/
 		.bird-info > img {
 			width: 300px;
 		}
@@ -131,3 +152,10 @@ def create_html_file(recordings):
 	"""
 
 	return html
+
+
+def save_html_file(bird_name, html):
+	file_name = bird_name.lower().replace(" ", "_")
+	f = open("{0}.html".format(file_name), "w")
+	f.write(html)
+	f.close()
