@@ -27,6 +27,13 @@ def get_bird_recordings(bird_name):
 				bird["recordings"]["file_url"].append(file_url)
 				bird["recordings"]["download_url"].append(recording["file"])
 	else:
-		print(api["error"])
-
+		return api["error"]
 	return bird
+
+
+bird_recordings = get_bird_recordings(input("Enter bird generic name (e.g., Dendrocopos Major): "))
+
+if bird_recordings:
+	save_html_file(bird_recordings["bird_gen_name"], create_html_file(bird_recordings))
+else:
+	print(bird_recordings)
